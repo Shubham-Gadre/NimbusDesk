@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="NimbusDesk.API/NimbusDesk.API.csproj" />
+  <Project Path="NimbusDesk.Application/NimbusDesk.Application.csproj" Id="f45123d0-f538-4343-843c-7e88c3eb39b6" />
+  <Project Path="NimbusDesk.Domain/NimbusDesk.Domain.csproj" Id="2e13eeff-0a65-4fac-bd6d-3542c82d87f7" />
+  <Project Path="NimbusDesk.Infrastructure/NimbusDesk.Infrastructure.csproj" Id="f07ba312-e085-46e1-8acc-c4b473e5b880" />
+  <Project Path="NimbusDesk.Tests/NimbusDesk.Tests.csproj" Id="c83df220-0141-495e-9c7d-121783f9a551" />
+</Solution>
