@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NimbusDesk.Application.Tickets;
+using NimbusDesk.Application.Abstraction.Persistence;
+using NimbusDesk.Application.Tickets.Close;
+using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Domain.ValueObjects;
+using NimbusDesk.Infrastructure.Persistence;
 
 namespace NimbusDesk.API.Controllers
 {
@@ -10,16 +13,30 @@ namespace NimbusDesk.API.Controllers
     public sealed class TicketsController : ControllerBase
     {
         private readonly CreateTicketHandler _handler;
+        private readonly CloseTicketHandler _closeTicketHandler;
+        private readonly ITicketRepository _repository;
 
-        public TicketsController(CreateTicketHandler handler)
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository)
         {
             _handler = handler;
+            _closeTicketHandler = closeHandler;
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
         public sealed record CreateTicketRequest
         (
             string Title,
             string Description,
-            TicketPriority Priority
+            string Priority
+        );
+
+        public sealed record TicketDto(
+            Guid Id,
+            string Title,
+            string Description,
+            TicketStatus Status,
+            string Priority,
+            DateTime CreatedAt,
+            DateTime? ClosedAt
         );
 
         [HttpPost]
@@ -34,8 +51,43 @@ namespace NimbusDesk.API.Controllers
 
             var ticketId = await _handler.Handle(command, cancellationToken);
 
-            return CreatedAtAction(nameof(Create), new { id = ticketId }, null);
+            return CreatedAtAction(nameof(GetById), new { id = ticketId }, null);
         }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+        {
+            var ticket = await _repository.GetByIdAsync(id, cancellationToken);
+            if (ticket is null) return NotFound();
+
+            var dto = new TicketDto(
+                ticket.Id,
+                ticket.Title,
+                ticket.Description,
+                ticket.Status,
+                ticket.Priority.Value,
+                ticket.CreatedAt,
+                ticket.ClosedAt);
+
+            return Ok(dto);
+
+        }
+
+
+        [HttpPost("{id:guid}/close")]
+        public async Task<IActionResult> Close(
+                            Guid id,
+                            CancellationToken cancellationToken)
+        {
+            var command = new CloseTicketCommand(id);
+
+            await _closeTicketHandler.Handle(command, cancellationToken);
+
+            return NoContent();
+        }
+
+        
+
     }
     
 }

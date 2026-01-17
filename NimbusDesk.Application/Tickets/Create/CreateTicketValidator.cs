@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NimbusDesk.Application.Tickets
+namespace NimbusDesk.Application.Tickets.Create
 {
     public sealed class CreateTicketValidator
     : AbstractValidator<CreateTicketCommand>
@@ -19,16 +19,16 @@ namespace NimbusDesk.Application.Tickets
                 .MaximumLength(2000);
 
             RuleFor(x => x.Priority)
-                .NotNull()
-                .Must(BeValidPriority)
-                .WithMessage("Invalid ticket priority.");
+            .NotEmpty()
+            .Must(BeValidPriority)
+            .WithMessage("Invalid ticket priority.");
         }
-
-        private static bool BeValidPriority(TicketPriority priority)
+        private static bool BeValidPriority(string priority)
         {
-            return priority == TicketPriority.Low
-                || priority == TicketPriority.Medium
-                || priority == TicketPriority.High;
+            return priority == "Low"
+                || priority == "Medium"
+                || priority == "High";
         }
+        
     }
 }

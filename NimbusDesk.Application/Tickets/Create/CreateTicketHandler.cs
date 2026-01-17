@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Domain.Entities;
+using NimbusDesk.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NimbusDesk.Application.Tickets
+namespace NimbusDesk.Application.Tickets.Create
 {
     public sealed class CreateTicketHandler
     {
@@ -25,11 +26,12 @@ namespace NimbusDesk.Application.Tickets
             CancellationToken cancellationToken)
         {
             await _validator.ValidateAndThrowAsync(command, cancellationToken);
+            var priority = TicketPriority.FromValue(command.Priority);
 
             var ticket = new Ticket(
                 command.Title,
                 command.Description,
-                command.Priority);
+                priority);
 
             await _ticketRepository.AddAsync(ticket, cancellationToken);
 

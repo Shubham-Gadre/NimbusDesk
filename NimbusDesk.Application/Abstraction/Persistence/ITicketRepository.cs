@@ -8,5 +8,7 @@ namespace NimbusDesk.Application.Abstraction.Persistence
     public interface ITicketRepository
     {
         Task AddAsync(Ticket ticket, CancellationToken cancellationToken);
+        Task<Ticket?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NimbusDesk.Application.Tickets
+namespace NimbusDesk.Application.Tickets.Create
 {
     public sealed record CreateTicketCommand
     (
         string Title,
         string Description,
-        TicketPriority Priority
+        string Priority
     );
 }
