@@ -1,4 +1,5 @@
-﻿using NimbusDesk.Application.Abstraction.Persistence;
+﻿using Microsoft.EntityFrameworkCore;
+using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,18 @@ namespace NimbusDesk.Infrastructure.Persistence
             CancellationToken cancellationToken)
         {
             _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        public async Task<Ticket?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+        {
+            return await _context.Tickets
+                .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken)
+        {
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
