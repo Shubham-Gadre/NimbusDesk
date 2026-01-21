@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
+using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Domain.ValueObjects;
 using NimbusDesk.Infrastructure.Persistence;
 
@@ -15,12 +16,14 @@ namespace NimbusDesk.API.Controllers
         private readonly CreateTicketHandler _handler;
         private readonly CloseTicketHandler _closeTicketHandler;
         private readonly ITicketRepository _repository;
+        private readonly GetTicketsHandler _getTicketsHandler;
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository)
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository,GetTicketsHandler getTicketsHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _getTicketsHandler= getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
         }
         public sealed record CreateTicketRequest
         (
@@ -73,6 +76,27 @@ namespace NimbusDesk.API.Controllers
 
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IReadOnlyList<TicketSummaryDto>>> Get(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20,
+    [FromQuery] string? status = null,
+    [FromQuery] string? priority = null,
+    CancellationToken cancellationToken = default)
+        {
+            var query = new GetTicketsQuery(
+                page,
+                pageSize,
+                status,
+                priority);
+
+            var tickets = await _getTicketsHandler
+                .Handle(query, cancellationToken);
+
+            return Ok(tickets);
+        }
+
+
 
         [HttpPost("{id:guid}/close")]
         public async Task<IActionResult> Close(
@@ -86,8 +110,8 @@ namespace NimbusDesk.API.Controllers
             return NoContent();
         }
 
-        
+
 
     }
-    
+
 }

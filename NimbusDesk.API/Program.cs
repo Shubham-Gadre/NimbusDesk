@@ -4,6 +4,7 @@ using NimbusDesk.API.Middleware;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
+using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Infrastructure.Persistence;
 
 namespace NimbusDesk.API
@@ -29,6 +30,7 @@ namespace NimbusDesk.API
             builder.Services.AddScoped<ITicketRepository, TicketRepository>();
             builder.Services.AddScoped<CreateTicketHandler>();
             builder.Services.AddScoped<CloseTicketHandler>();
+            builder.Services.AddScoped<GetTicketsHandler>();
 
 
             var app = builder.Build();
