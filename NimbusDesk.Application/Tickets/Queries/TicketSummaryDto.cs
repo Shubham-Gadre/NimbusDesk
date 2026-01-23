@@ -11,10 +11,5 @@ namespace NimbusDesk.Application.Tickets.Queries
         string Priority,
         DateTime CreatedAt
     );
-    public sealed record GetTicketsQuery(
-        int Page = 1,
-        int PageSize = 20,
-        string? Status = null,
-        string? Priority = null
-    );
+    
 }

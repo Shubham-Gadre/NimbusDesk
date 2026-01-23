@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NimbusDesk.Application.Abstraction.Persistence;
+using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace NimbusDesk.Infrastructure.Persistence
 {
@@ -16,7 +15,7 @@ namespace NimbusDesk.Infrastructure.Persistence
         {
             _context = context;
         }
-
+        -+
         public async Task AddAsync(
             Ticket ticket,
             CancellationToken cancellationToken)
@@ -43,7 +42,7 @@ namespace NimbusDesk.Infrastructure.Persistence
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IReadOnlyList<TicketSummaryDto>> GetPagedAsync(
+        public async Task<PagedResult<TicketSummaryDto>> GetPagedAsync(
     GetTicketsQuery query,
     CancellationToken cancellationToken)
         {
@@ -59,7 +58,23 @@ namespace NimbusDesk.Infrastructure.Persistence
                 tickets = tickets.Where(t => t.Priority.Value == query.Priority);
             }
 
-            return await tickets
+            var totalCount = await tickets.CountAsync(cancellationToken);
+            tickets = query.SortBy switch
+            {
+                TicketSortOptions.Priority => query.SortDirection == "asc"
+                    ? tickets.OrderBy(t => t.Priority.Value)
+                    : tickets.OrderByDescending(t => t.Priority.Value),
+
+                TicketSortOptions.Status => query.SortDirection == "asc"
+                    ? tickets.OrderBy(t => t.Status.Value)
+                    : tickets.OrderByDescending(t => t.Status.Value),
+
+                _ => query.SortDirection == "asc"
+                    ? tickets.OrderBy(t => t.CreatedAt)
+                    : tickets.OrderByDescending(t => t.CreatedAt)
+            };
+
+            var items = await tickets
                 .OrderByDescending(t => t.CreatedAt)
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
@@ -70,6 +85,12 @@ namespace NimbusDesk.Infrastructure.Persistence
                     t.Priority.Value,
                     t.CreatedAt))
                 .ToListAsync(cancellationToken);
+
+            return new PagedResult<TicketSummaryDto>(
+                items,
+                query.Page,
+                query.PageSize,
+                totalCount);
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NimbusDesk.Application.Abstraction.Persistence;
+using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
@@ -18,12 +19,12 @@ namespace NimbusDesk.API.Controllers
         private readonly ITicketRepository _repository;
         private readonly GetTicketsHandler _getTicketsHandler;
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository,GetTicketsHandler getTicketsHandler)
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _getTicketsHandler= getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
+            _getTicketsHandler = getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
         }
         public sealed record CreateTicketRequest
         (
@@ -77,12 +78,12 @@ namespace NimbusDesk.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<TicketSummaryDto>>> Get(
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 20,
-    [FromQuery] string? status = null,
-    [FromQuery] string? priority = null,
-    CancellationToken cancellationToken = default)
+        public async Task<ActionResult<PagedResult<TicketSummaryDto>>> Get(
+                [FromQuery] int page = 1,
+                [FromQuery] int pageSize = 20,
+                [FromQuery] string? status = null,
+                [FromQuery] string? priority = null,
+                CancellationToken cancellationToken = default)
         {
             var query = new GetTicketsQuery(
                 page,
@@ -90,10 +91,10 @@ namespace NimbusDesk.API.Controllers
                 status,
                 priority);
 
-            var tickets = await _getTicketsHandler
+            var result = await _getTicketsHandler
                 .Handle(query, cancellationToken);
 
-            return Ok(tickets);
+            return Ok(result);
         }
 
 
@@ -102,7 +103,7 @@ namespace NimbusDesk.API.Controllers
         public async Task<IActionResult> Close(
                             Guid id,
                             CancellationToken cancellationToken)
-        {
+        {   
             var command = new CloseTicketCommand(id);
 
             await _closeTicketHandler.Handle(command, cancellationToken);
