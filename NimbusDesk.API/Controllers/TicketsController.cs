@@ -18,13 +18,16 @@ namespace NimbusDesk.API.Controllers
         private readonly CloseTicketHandler _closeTicketHandler;
         private readonly ITicketRepository _repository;
         private readonly GetTicketsHandler _getTicketsHandler;
+        private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler)
+
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _getTicketsHandler = getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
+            _getTicketHistoryHandler = getTicketHistoryHandler;
         }
         public sealed record CreateTicketRequest
         (
@@ -103,12 +106,20 @@ namespace NimbusDesk.API.Controllers
         public async Task<IActionResult> Close(
                             Guid id,
                             CancellationToken cancellationToken)
-        {   
+        {
             var command = new CloseTicketCommand(id);
 
             await _closeTicketHandler.Handle(command, cancellationToken);
 
             return NoContent();
+        }
+
+        [HttpGet("{id:guid}/history")]
+        public async Task<ActionResult<IReadOnlyList<TicketHistoryDto>>> GetHistory(Guid id, CancellationToken cancellationToken)
+        {
+            var history = await _getTicketHistoryHandler.Handle(id, cancellationToken);
+
+            return Ok(history);
         }
 
 

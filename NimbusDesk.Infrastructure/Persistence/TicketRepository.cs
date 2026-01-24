@@ -15,7 +15,7 @@ namespace NimbusDesk.Infrastructure.Persistence
         {
             _context = context;
         }
-        -+
+
         public async Task AddAsync(
             Ticket ticket,
             CancellationToken cancellationToken)
@@ -92,6 +92,32 @@ namespace NimbusDesk.Infrastructure.Persistence
                 query.PageSize,
                 totalCount);
         }
+
+        public async Task<IReadOnlyList<TicketHistoryDto>> GetHistoryAsync(Guid ticketId, CancellationToken cancellationToken)
+        {
+            return await _context.Set<TicketHistory>()
+                .Where(h => h.TicketId == ticketId)
+                .OrderBy(h => h.ChangedAt)
+                .Select(h => new TicketHistoryDto(
+                    h.FromStatus,
+                    h.ToStatus,
+                    h.ChangedAt))
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task UpdateAsync(Ticket ticket, CancellationToken cancellationToken)
+        {
+            // If the entity instance is not currently tracked by this context, attach and mark modified.
+            var entry = _context.ChangeTracker.Entries<Ticket>().FirstOrDefault(e => e.Entity == ticket);
+            if (entry is null)
+            {
+                _context.Tickets.Attach(ticket);
+                _context.Entry(ticket).State = EntityState.Modified;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
 
     }
 }

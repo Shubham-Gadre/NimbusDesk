@@ -10,98 +10,111 @@ namespace NimbusDesk.Domain.Entities
     /// </summary>
     public class Ticket
     {
-        
-        
-            public Guid Id { get; }
 
-            /// <summary>
-            /// Short, human-readable summary of the issue.
-            /// Cannot be empty.
-            /// </summary>
-            public string Title { get; private set; }
+        private readonly List<TicketHistory> _history = new();
 
-            /// <summary>
-            /// Detailed description of the problem.
-            /// Optional but encouraged.
-            /// </summary>
-            public string Description { get; private set; }
+        public IReadOnlyCollection<TicketHistory> History => _history.AsReadOnly();
 
-            /// <summary>
-            /// Current lifecycle status of the ticket.
-            /// Status transitions are controlled by domain methods.
-            /// </summary>
-            public TicketStatus Status { get; private set; }
+        public Guid Id { get; }
 
-            /// <summary>
-            /// Indicates urgency and impact.
-            /// </summary>
-            public TicketPriority Priority { get; private set; }
+        /// <summary>
+        /// Short, human-readable summary of the issue.
+        /// Cannot be empty.
+        /// </summary>
+        public string Title { get; private set; }
 
-            /// <summary>
-            /// UTC timestamp when the ticket was created.
-            /// </summary>
-            public DateTime CreatedAt { get; }
+        /// <summary>
+        /// Detailed description of the problem.
+        /// Optional but encouraged.
+        /// </summary>
+        public string Description { get; private set; }
 
-            /// <summary>
-            /// UTC timestamp when the ticket was closed.
-            /// Set only when status becomes Closed.
-            /// </summary>
-            public DateTime? ClosedAt { get; private set; }
+        /// <summary>
+        /// Current lifecycle status of the ticket.
+        /// Status transitions are controlled by domain methods.
+        /// </summary>
+        public TicketStatus Status { get; private set; }
 
-            /// <summary>
-            /// Creates a new ticket.
-            /// Invariant: A ticket always starts in the Open state.
-            /// </summary>
-            public Ticket(string title, string description, TicketPriority priority)
-            {
-                if (string.IsNullOrWhiteSpace(title))
-                    throw new DomainException("Ticket title cannot be empty.");
+        /// <summary>
+        /// Indicates urgency and impact.
+        /// </summary>
+        public TicketPriority Priority { get; private set; }
 
-                Id = Guid.NewGuid();
-                Title = title;
-                Description = description;
-                Priority = priority;
-                Status = TicketStatus.Open;
-                CreatedAt = DateTime.UtcNow;
-            }
+        /// <summary>
+        /// UTC timestamp when the ticket was created.
+        /// </summary>
+        public DateTime CreatedAt { get; }
 
-            /// <summary>
-            /// Moves the ticket from Open to In Progress.
-            /// </summary>
-            public void StartProgress()
-            {
-                if (Status != TicketStatus.Open)
-                    throw new DomainException(
-                        "Only tickets in Open state can be moved to In Progress.");
+        /// <summary>
+        /// UTC timestamp when the ticket was closed.
+        /// Set only when status becomes Closed.
+        /// </summary>
+        public DateTime? ClosedAt { get; private set; }
 
-                Status = TicketStatus.InProgress;
-            }
+        /// <summary>
+        /// Creates a new ticket.
+        /// Invariant: A ticket always starts in the Open state.
+        /// </summary>
+        public Ticket(string title, string description, TicketPriority priority)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new DomainException("Ticket title cannot be empty.");
 
-            /// <summary>
-            /// Marks the ticket as Waiting (e.g. for customer input).
-            /// Allowed only from In Progress.
-            /// </summary>
-            public void MarkWaiting()
-            {
-                if (Status != TicketStatus.InProgress)
-                    throw new DomainException(
-                        "Only tickets in progress can be marked as Waiting.");
-
-                Status = TicketStatus.Waiting;
-            }
-
-            /// <summary>
-            /// Closes the ticket permanently.
-            /// Once closed, no further state changes are allowed.
-            /// </summary>
-            public void Close()
-            {
-                if (Status == TicketStatus.Closed)
-                    throw new DomainException("Ticket is already closed.");
-
-                Status = TicketStatus.Closed;
-                ClosedAt = DateTime.UtcNow;
-            }
+            Id = Guid.NewGuid();
+            Title = title;
+            Description = description;
+            Priority = priority;
+            Status = TicketStatus.Open;
+            CreatedAt = DateTime.UtcNow;
         }
+
+        /// <summary>
+        /// Moves the ticket from Open to In Progress.
+        /// </summary>
+        public void StartProgress()
+        {
+            if (Status != TicketStatus.Open)
+                throw new DomainException(
+                    "Only tickets in Open state can be moved to In Progress.");
+
+            Status = TicketStatus.InProgress;
+        }
+
+        /// <summary>
+        /// Marks the ticket as Waiting (e.g. for customer input).
+        /// Allowed only from In Progress.
+        /// </summary>
+        public void MarkWaiting()
+        {
+            if (Status != TicketStatus.InProgress)
+                throw new DomainException(
+                    "Only tickets in progress can be marked as Waiting.");
+
+            Status = TicketStatus.Waiting;
+        }
+
+        /// <summary>
+        /// Closes the ticket permanently.
+        /// Once closed, no further state changes are allowed.
+        /// </summary>
+        public void Close()
+        {
+            if (Status == TicketStatus.Closed)
+                throw new DomainException("Ticket is already closed.");
+
+            var previousStatus = Status.Value;
+
+            Status = TicketStatus.Closed;
+            ClosedAt = DateTime.UtcNow;
+            var history = TicketHistory.Create(
+                    Id,
+                    previousStatus,
+                    Status.Value,
+                    DateTime.UtcNow);
+            _history.Add(history);
+
+        }
+
     }
+}
 
