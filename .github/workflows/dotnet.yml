@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore NimbusDesk.slnx
 
       - name: Build
-        run: dotnet build NimbusDesk.sln --no-restore --configuration Release
+        run: dotnet build NimbusDesk.slnx --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test NimbusDesk.sln --no-build --configuration Release --verbosity normal
+        run: dotnet test NimbusDesk.slnx --no-build --configuration Release --verbosity normal
