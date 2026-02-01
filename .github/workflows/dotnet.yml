@@ -20,7 +20,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore dependencies
-        run: dotnet restore NimbusDesk.sln
+        run: dotnet restore NimbusDesk.slnx
 
       - name: Build
         run: dotnet build NimbusDesk.sln --no-restore --configuration Release
