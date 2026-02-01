@@ -34,7 +34,8 @@ namespace NimbusDesk.Infrastructure.Persistence.Configurations
                     status => status.Value,
                       value => TicketStatus.FromValue(value))
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .IsConcurrencyToken(false);
 
             // Value Object: TicketPriority
             builder.Property(t => t.Priority)
@@ -46,6 +47,29 @@ namespace NimbusDesk.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(t => t.Status);
             builder.HasIndex(t => t.CreatedAt);
+
+            // Composite index for status filtering + pagination
+            builder.HasIndex("Status", nameof(Ticket.CreatedAt))
+                   .HasDatabaseName("IX_Tickets_Status_CreatedAt");
+
+            // Composite index for priority filtering + pagination
+            builder.HasIndex("Priority", nameof(Ticket.CreatedAt))
+                   .HasDatabaseName("IX_Tickets_Priority_CreatedAt");
+
+            // Index for default ordering
+            builder.HasIndex(t => t.CreatedAt)
+                   .HasDatabaseName("IX_Tickets_CreatedAt");
+
+            builder.HasMany(t => t.History)
+                   .WithOne()
+                   .HasForeignKey(h => h.TicketId)
+                   .IsRequired()
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(t => t.History)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+
         }
     }
 }

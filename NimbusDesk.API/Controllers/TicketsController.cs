@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NimbusDesk.Application.Abstraction.Persistence;
+using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
+using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Domain.ValueObjects;
 using NimbusDesk.Infrastructure.Persistence;
 
@@ -15,12 +17,17 @@ namespace NimbusDesk.API.Controllers
         private readonly CreateTicketHandler _handler;
         private readonly CloseTicketHandler _closeTicketHandler;
         private readonly ITicketRepository _repository;
+        private readonly GetTicketsHandler _getTicketsHandler;
+        private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository)
+
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _getTicketsHandler = getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
+            _getTicketHistoryHandler = getTicketHistoryHandler;
         }
         public sealed record CreateTicketRequest
         (
@@ -73,6 +80,27 @@ namespace NimbusDesk.API.Controllers
 
         }
 
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<TicketSummaryDto>>> Get(
+                [FromQuery] int page = 1,
+                [FromQuery] int pageSize = 20,
+                [FromQuery] string? status = null,
+                [FromQuery] string? priority = null,
+                CancellationToken cancellationToken = default)
+        {
+            var query = new GetTicketsQuery(
+                page,
+                pageSize,
+                status,
+                priority);
+
+            var result = await _getTicketsHandler
+                .Handle(query, cancellationToken);
+
+            return Ok(result);
+        }
+
+
 
         [HttpPost("{id:guid}/close")]
         public async Task<IActionResult> Close(
@@ -86,8 +114,16 @@ namespace NimbusDesk.API.Controllers
             return NoContent();
         }
 
-        
+        [HttpGet("{id:guid}/history")]
+        public async Task<ActionResult<IReadOnlyList<TicketHistoryDto>>> GetHistory(Guid id, CancellationToken cancellationToken)
+        {
+            var history = await _getTicketHistoryHandler.Handle(id, cancellationToken);
+
+            return Ok(history);
+        }
+
+
 
     }
-    
+
 }

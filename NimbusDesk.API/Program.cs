@@ -4,6 +4,7 @@ using NimbusDesk.API.Middleware;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
+using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Infrastructure.Persistence;
 
 namespace NimbusDesk.API
@@ -22,6 +23,9 @@ namespace NimbusDesk.API
             builder.Services.AddValidatorsFromAssemblyContaining<CreateTicketValidator>();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+            builder.Services.AddDbContext<NimbusDeskDbContext>(options =>
+            options.UseSqlServer(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
                 builder.Services.AddDbContext<NimbusDeskDbContext>(options =>
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -29,16 +33,19 @@ namespace NimbusDesk.API
             builder.Services.AddScoped<ITicketRepository, TicketRepository>();
             builder.Services.AddScoped<CreateTicketHandler>();
             builder.Services.AddScoped<CloseTicketHandler>();
+            builder.Services.AddScoped<GetTicketsHandler>();
+            builder.Services.AddScoped<GetTicketHistoryHandler>();
+
 
 
             var app = builder.Build();
            
             // Configure the HTTP request pipeline.
-            
-                app.MapOpenApi();
+
+            app.MapOpenApi();
 
             app.UseSwagger();
-               app.UseSwaggerUI();
+            app.UseSwaggerUI();
             app.UseHttpsRedirection();
 
             app.UseAuthorization();

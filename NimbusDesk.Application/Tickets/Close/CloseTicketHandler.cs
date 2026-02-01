@@ -27,7 +27,7 @@ namespace NimbusDesk.Application.Tickets.Close
 
             ticket.Close();
 
-            await _ticketRepository.SaveChangesAsync(cancellationToken);
+            await _ticketRepository.UpdateAsync(ticket, cancellationToken);
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NimbusDesk.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using NimbusDesk.Infrastructure.Persistence;
 namespace NimbusDesk.Infrastructure.Migrations
 {
     [DbContext(typeof(NimbusDeskDbContext))]
-    partial class NimbusDeskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260124163839_AddTicketIndexes")]
+    partial class AddTicketIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,61 +59,11 @@ namespace NimbusDesk.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_Tickets_CreatedAt");
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Status");
 
-                    b.HasIndex("Priority", "CreatedAt")
-                        .HasDatabaseName("IX_Tickets_Priority_CreatedAt");
-
-                    b.HasIndex("Status", "CreatedAt")
-                        .HasDatabaseName("IX_Tickets_Status_CreatedAt");
-
                     b.ToTable("Tickets", (string)null);
-                });
-
-            modelBuilder.Entity("NimbusDesk.Domain.Entities.TicketHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ChangedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FromStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("TicketId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ToStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TicketId");
-
-                    b.ToTable("TicketHistory", (string)null);
-                });
-
-            modelBuilder.Entity("NimbusDesk.Domain.Entities.TicketHistory", b =>
-                {
-                    b.HasOne("NimbusDesk.Domain.Entities.Ticket", null)
-                        .WithMany("History")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("NimbusDesk.Domain.Entities.Ticket", b =>
-                {
-                    b.Navigation("History");
                 });
 #pragma warning restore 612, 618
         }
