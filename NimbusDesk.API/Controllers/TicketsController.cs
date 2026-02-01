@@ -5,6 +5,8 @@ using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
+using NimbusDesk.Application.Tickets.ReOpen;
+using NimbusDesk.Application.Tickets.Update;
 using NimbusDesk.Domain.ValueObjects;
 using NimbusDesk.Infrastructure.Persistence;
 
@@ -19,15 +21,19 @@ namespace NimbusDesk.API.Controllers
         private readonly ITicketRepository _repository;
         private readonly GetTicketsHandler _getTicketsHandler;
         private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
+        private readonly ReopenTicketHandler _reopenTicketHandler;
+        private readonly UpdateTicketHandler _updateTicketHandler;
 
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler)
+        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler, ReopenTicketHandler reopenTicketHandler, UpdateTicketHandler updateTicketHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _getTicketsHandler = getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
             _getTicketHistoryHandler = getTicketHistoryHandler;
+            _reopenTicketHandler = reopenTicketHandler;
+            _updateTicketHandler = updateTicketHandler;
         }
         public sealed record CreateTicketRequest
         (
@@ -45,6 +51,10 @@ namespace NimbusDesk.API.Controllers
             DateTime CreatedAt,
             DateTime? ClosedAt
         );
+        public sealed record UpdateTicketRequest(
+            string Title,
+            string Description,
+            string Priority);
 
         [HttpPost]
         public async Task<IActionResult> Create(
@@ -122,7 +132,29 @@ namespace NimbusDesk.API.Controllers
             return Ok(history);
         }
 
+        [HttpPost("{id:guid}/reopen")]
+        public async Task<IActionResult> Reopen(Guid id, CancellationToken cancellationToken)
+        {
+            var command = new ReopenTicketCommand(id);
 
+            await _reopenTicketHandler.Handle(command, cancellationToken);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, UpdateTicketRequest request, CancellationToken cancellationToken)
+        {
+            var command = new UpdateTicketCommand(
+                id,
+                request.Title,
+                request.Description,
+                request.Priority);
+
+            await _updateTicketHandler.Handle(command, cancellationToken);
+
+            return NoContent();
+        }
 
     }
 

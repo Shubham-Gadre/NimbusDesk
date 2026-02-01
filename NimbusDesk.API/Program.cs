@@ -5,12 +5,14 @@ using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
+using NimbusDesk.Application.Tickets.ReOpen;
+using NimbusDesk.Application.Tickets.Update;
 using NimbusDesk.Infrastructure.Persistence;
 
 namespace NimbusDesk.API
 {
     public class Program
-    {   
+    {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -26,20 +28,23 @@ namespace NimbusDesk.API
             builder.Services.AddDbContext<NimbusDeskDbContext>(options =>
             options.UseSqlServer(
                 builder.Configuration.GetConnectionString("DefaultConnection")));
-                builder.Services.AddDbContext<NimbusDeskDbContext>(options =>
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<NimbusDeskDbContext>(options =>
+            options.UseSqlServer(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddScoped<ITicketRepository, TicketRepository>();
             builder.Services.AddScoped<CreateTicketHandler>();
             builder.Services.AddScoped<CloseTicketHandler>();
             builder.Services.AddScoped<GetTicketsHandler>();
             builder.Services.AddScoped<GetTicketHistoryHandler>();
+            builder.Services.AddScoped<ReopenTicketHandler>();
+            builder.Services.AddScoped<UpdateTicketHandler>();
+
 
 
 
             var app = builder.Build();
-           
+
             // Configure the HTTP request pipeline.
 
             app.MapOpenApi();
