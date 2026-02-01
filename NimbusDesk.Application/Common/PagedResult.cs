@@ -11,6 +11,8 @@ namespace NimbusDesk.Application.Common
         public int PageSize { get; }
         public int TotalCount { get; }
         public int TotalPages { get; }
+        public bool HasPreviousPage => Page > 1;
+        public bool HasNextPage => Page < TotalPages;
 
         public PagedResult(
             IReadOnlyList<T> items,
@@ -18,6 +20,10 @@ namespace NimbusDesk.Application.Common
             int pageSize,
             int totalCount)
         {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(page);
+
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageSize);
+
             Items = items;
             Page = page;
             PageSize = pageSize;

@@ -1,7 +1,4 @@
 ﻿using NimbusDesk.Domain.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NimbusDesk.Domain.Entities
 {
@@ -10,44 +7,44 @@ namespace NimbusDesk.Domain.Entities
         public Guid Id { get; private set; }
         public Guid TicketId { get; private set; }
 
-        public string FromStatus { get; private set; }
-        public string ToStatus { get; private set; }
+        public string ChangeType { get; private set; }
+        public string FromValue { get; private set; }
+        public string ToValue { get; private set; }
 
         public DateTime ChangedAt { get; private set; }
 
-        // EF Core constructor
-        private TicketHistory() { }
+        private TicketHistory() { } // EF Core
 
         private TicketHistory(
             Guid ticketId,
-            string fromStatus,
-            string toStatus,
-            DateTime changedAt)
+            string changeType,
+            string fromValue,
+            string toValue)
         {
             Id = Guid.NewGuid();
             TicketId = ticketId;
-            FromStatus = fromStatus;
-            ToStatus = toStatus;
-            ChangedAt = changedAt;
+            ChangeType = changeType;
+            FromValue = fromValue;
+            ToValue = toValue;
+            ChangedAt = DateTime.UtcNow;
         }
 
         public static TicketHistory Create(
             Guid ticketId,
-            string fromStatus,
-            string toStatus,
-            DateTime changedAt)
+            string changeType,
+            string fromValue,
+            string toValue)
         {
-            if (string.IsNullOrWhiteSpace(fromStatus))
-                throw new DomainException("FromStatus cannot be empty.");
-
-            if (string.IsNullOrWhiteSpace(toStatus))
-                throw new DomainException("ToStatus cannot be empty.");
+            if (string.IsNullOrWhiteSpace(changeType))
+                throw new DomainException("ChangeType cannot be empty.");
 
             return new TicketHistory(
                 ticketId,
-                fromStatus,
-                toStatus,
-                changedAt);
+                changeType,
+                fromValue,
+                toValue);
         }
     }
 }
+
+

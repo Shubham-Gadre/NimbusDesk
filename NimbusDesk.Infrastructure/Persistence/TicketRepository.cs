@@ -46,7 +46,9 @@ namespace NimbusDesk.Infrastructure.Persistence
     GetTicketsQuery query,
     CancellationToken cancellationToken)
         {
-            var tickets = _context.Tickets.AsQueryable();
+            var tickets = _context.Tickets
+                .AsNoTracking()
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query.Status))
             {
@@ -59,6 +61,7 @@ namespace NimbusDesk.Infrastructure.Persistence
             }
 
             var totalCount = await tickets.CountAsync(cancellationToken);
+
             tickets = query.SortBy switch
             {
                 TicketSortOptions.Priority => query.SortDirection == "asc"
@@ -75,7 +78,6 @@ namespace NimbusDesk.Infrastructure.Persistence
             };
 
             var items = await tickets
-                .OrderByDescending(t => t.CreatedAt)
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .Select(t => new TicketSummaryDto(
@@ -93,14 +95,16 @@ namespace NimbusDesk.Infrastructure.Persistence
                 totalCount);
         }
 
+
         public async Task<IReadOnlyList<TicketHistoryDto>> GetHistoryAsync(Guid ticketId, CancellationToken cancellationToken)
         {
             return await _context.Set<TicketHistory>()
+                .AsNoTracking()
                 .Where(h => h.TicketId == ticketId)
                 .OrderBy(h => h.ChangedAt)
                 .Select(h => new TicketHistoryDto(
-                    h.FromStatus,
-                    h.ToStatus,
+                    h.FromValue,
+                    h.ToValue,
                     h.ChangedAt))
                 .ToListAsync(cancellationToken);
         }
@@ -121,3 +125,6 @@ namespace NimbusDesk.Infrastructure.Persistence
 
     }
 }
+
+
+
