@@ -101,8 +101,9 @@ namespace NimbusDesk.Infrastructure.Persistence
             return await _context.Set<TicketHistory>()
                 .AsNoTracking()
                 .Where(h => h.TicketId == ticketId)
-                .OrderBy(h => h.ChangedAt)
+                .OrderByDescending(h => h.ChangedAt) // Newest changes first
                 .Select(h => new TicketHistoryDto(
+                    h.ChangeType,
                     h.FromValue,
                     h.ToValue,
                     h.ChangedAt))
