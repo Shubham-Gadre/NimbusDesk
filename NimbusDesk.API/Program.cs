@@ -4,6 +4,7 @@ using NimbusDesk.API.Middleware;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Tickets.Assign;
 using NimbusDesk.Application.Tickets.Close;
+using NimbusDesk.Application.Tickets.Comment;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Application.Tickets.ReOpen;
@@ -41,6 +42,8 @@ namespace NimbusDesk.API
             builder.Services.AddScoped<ReopenTicketHandler>();
             builder.Services.AddScoped<UpdateTicketHandler>();
             builder.Services.AddScoped<AssignTicketHandler>();
+            builder.Services.AddScoped<AddCommentHandler>();
+            builder.Services.AddScoped<GetTicketDetailsHandler>();
 
 
 

@@ -3,6 +3,7 @@ using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Domain.Entities;
+using NimbusDesk.Domain.Exceptions;
 
 
 namespace NimbusDesk.Infrastructure.Persistence
@@ -112,18 +113,50 @@ namespace NimbusDesk.Infrastructure.Persistence
 
         public async Task UpdateAsync(Ticket ticket, CancellationToken cancellationToken)
         {
-            // If the entity instance is not currently tracked by this context, attach and mark modified.
-            var entry = _context.ChangeTracker.Entries<Ticket>().FirstOrDefault(e => e.Entity == ticket);
-            if (entry is null)
+            try
             {
-                _context.Tickets.Attach(ticket);
-                _context.Entry(ticket).State = EntityState.Modified;
-            }
+                // Explicitly update only the ticket (with RowVersion for concurrency)
+                // Child entities (Comments, History) are already tracked or will be added by EF
+                foreach (var comment in ticket.Comments)
+                {
+                    var commentEntry = _context.Entry(comment);
+                    if (commentEntry.State == EntityState.Detached)
+                    {
+                        _context.Entry(comment).State = EntityState.Added;
+                    }
+                }
 
-            await _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Simple, clean error handling for your career flagship
+                throw new DomainException("The ticket was modified by another user. Please refresh.");
+            }
         }
 
-
+        public async Task<TicketDetailsDto?> GetDetailsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _context.Tickets
+                .AsNoTracking()
+                .Where(t => t.Id == id)
+                .Select(t => new TicketDetailsDto(
+                    t.Id,
+                    t.Title,
+                    t.Description,
+                    t.Status.Value,
+                    t.Priority.Value,
+                    t.AssignedToUserId,
+                    t.CreatedAt,
+                    t.ClosedAt,
+                    t.Comments.Select(c => new CommentDto(
+                        c.Id,
+                        c.UserId,
+                        c.Content,
+                        c.CreatedAt)).ToList()
+                ))
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }
 

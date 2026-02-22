@@ -232,6 +232,148 @@ namespace NimbusDesk.Tests.Domain
             Assert.Throws<DomainException>(() => ticket.Assign(Guid.NewGuid()));
         }
 
+        [Fact]
+        public void Assign_Does_Not_Add_History_When_User_Is_Same()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var userId = Guid.NewGuid();
+
+            ticket.Assign(userId);
+            var historyAfterFirst = ticket.History.Count;
+
+            ticket.Assign(userId); // Assign same user again
+
+            Assert.Equal(historyAfterFirst, ticket.History.Count); // No new history
+        }
+
+        [Fact]
+        public void Assign_Adds_History_When_User_Changes()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var userId1 = Guid.NewGuid();
+            var userId2 = Guid.NewGuid();
+
+            ticket.Assign(userId1);
+            var historyAfterFirst = ticket.History.Count;
+
+            ticket.Assign(userId2);
+
+            Assert.Equal(historyAfterFirst + 1, ticket.History.Count);
+            var lastEntry = ticket.History.Last();
+            Assert.Equal("AssignmentChanged", lastEntry.ChangeType);
+            Assert.Equal(userId1.ToString(), lastEntry.FromValue);
+            Assert.Equal(userId2.ToString(), lastEntry.ToValue);
+        }
+
+        [Fact]
+        public void Assign_Sets_AssignedToUserId()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var userId = Guid.NewGuid();
+
+            Assert.Null(ticket.AssignedToUserId);
+            ticket.Assign(userId);
+            Assert.Equal(userId, ticket.AssignedToUserId);
+        }
+
+        [Fact]
+        public void Assign_FromValue_Shows_Unassigned_When_No_Prior_Assignment()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var userId = Guid.NewGuid();
+
+            ticket.Assign(userId);
+
+            var assignmentHistory = ticket.History.First(h => h.ChangeType == "AssignmentChanged");
+            Assert.Equal("Unassigned", assignmentHistory.FromValue);
+        }
+
+        [Fact]
+        public void AddComment_Throws_When_Ticket_Is_Closed()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            ticket.Close();
+
+            Assert.Throws<DomainException>(() => 
+                ticket.AddComment(Guid.NewGuid(), "Comment"));
+        }
+
+        [Fact]
+        public void AddComment_Adds_Comment_To_Collection()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var userId = Guid.NewGuid();
+            var content = "Test comment";
+
+            ticket.AddComment(userId, content);
+
+            Assert.Single(ticket.Comments);
+            var comment = ticket.Comments.First();
+            Assert.Equal(userId, comment.UserId);
+            Assert.Equal(content, comment.Content);
+            Assert.Equal(ticket.Id, comment.TicketId);
+        }
+
+        [Fact]
+        public void AddComment_Multiple_Comments_Maintains_Order()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+
+            ticket.AddComment(Guid.NewGuid(), "First");
+            ticket.AddComment(Guid.NewGuid(), "Second");
+
+            Assert.Equal(2, ticket.Comments.Count);
+            Assert.Equal("First", ticket.Comments.First().Content);
+            Assert.Equal("Second", ticket.Comments.Last().Content);
+        }
+
+        [Fact]
+        public void Comments_Is_ReadOnly()
+        {
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var coll = (ICollection<Comment>)ticket.Comments;
+
+            Assert.True(coll.IsReadOnly);
+            Assert.Throws<NotSupportedException>(() => coll.Clear());
+        }
+
+        [Fact]
+        public void Constructor_Description_With_Only_Whitespace_Gets_Trimmed()
+        {
+            var ticket = new Ticket("Title", "   ", TicketPriority.Low);
+
+            Assert.Equal("", ticket.Description);
+        }
+
+        [Fact]
+        public void UpdateDetails_Can_Change_From_Null_To_Description()
+        {
+            var ticket = new Ticket("Title", null, TicketPriority.Low);
+
+            ticket.UpdateDetails("Title", "NewDesc", TicketPriority.Low);
+
+            Assert.Equal("NewDesc", ticket.Description);
+            Assert.Single(ticket.History);
+            Assert.Equal("DescriptionChanged", ticket.History.First().ChangeType);
+        }
+
+        [Fact]
+        public void History_Entries_Have_Valid_ChangedAt_Timestamps()
+        {
+            var beforeCreation = DateTime.UtcNow;
+            var ticket = new Ticket("Title", "Desc", TicketPriority.Low);
+            var afterCreation = DateTime.UtcNow;
+
+            ticket.UpdateDetails("NewTitle", "Desc", TicketPriority.Low);
+
+            Assert.NotEmpty(ticket.History);
+            Assert.All(ticket.History, h => 
+            {
+                Assert.True(h.ChangedAt >= beforeCreation);
+                Assert.True(h.ChangedAt <= afterCreation.AddSeconds(10));
+            });
+        }
+
     }
 }
 

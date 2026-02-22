@@ -16,6 +16,7 @@ namespace NimbusDesk.Application.Abstraction.Persistence
         //Task<IReadOnlyList<TicketSummaryDto>> GetPagedAsync(GetTicketsQuery query,CancellationToken cancellationToken);
         Task<PagedResult<TicketSummaryDto>> GetPagedAsync(GetTicketsQuery query, CancellationToken cancellationToken);
         Task<IReadOnlyList<TicketHistoryDto>> GetHistoryAsync(Guid ticketId, CancellationToken cancellationToken);
+        Task<TicketDetailsDto?> GetDetailsAsync(Guid id, CancellationToken cancellationToken);
 
 
 

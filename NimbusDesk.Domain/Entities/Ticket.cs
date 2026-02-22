@@ -16,7 +16,21 @@ namespace NimbusDesk.Domain.Entities
         public TicketPriority Priority { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime? ClosedAt { get; private set; }
+        public byte[] RowVersion { get; private set; }
         public Guid? AssignedToUserId { get; private set; }
+
+        private readonly List<Comment> _comments = new();
+        public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+
+        public void AddComment(Guid userId, string content)
+        {
+            // Business Rule: Accountability and Logic
+            if (Status == TicketStatus.Closed)
+                throw new DomainException("Cannot add comments to a closed ticket.");
+
+            var comment = new Comment(Id, userId, content);
+            _comments.Add(comment);
+        }
 
         public void Assign(Guid userId)
         {

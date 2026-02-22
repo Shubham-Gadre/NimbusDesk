@@ -4,6 +4,7 @@ using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Common;
 using NimbusDesk.Application.Tickets.Assign;
 using NimbusDesk.Application.Tickets.Close;
+using NimbusDesk.Application.Tickets.Comment;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Application.Tickets.ReOpen;
@@ -24,6 +25,7 @@ namespace NimbusDesk.API.Controllers
         private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
         private readonly ReopenTicketHandler _reopenTicketHandler;
         private readonly UpdateTicketHandler _updateTicketHandler;
+        public record AddCommentRequest(Guid UserId, string Content);
 
 
         public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler, ReopenTicketHandler reopenTicketHandler, UpdateTicketHandler updateTicketHandler)
@@ -69,10 +71,10 @@ namespace NimbusDesk.API.Controllers
 
             var ticketId = await _handler.Handle(command, cancellationToken);
 
-            return CreatedAtAction(nameof(GetById), new { id = ticketId }, null);
+            return CreatedAtAction(nameof(GetDetails), new { id = ticketId }, null);
         }
 
-        [HttpGet("{id:guid}")]
+        /*[HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
         {
             var ticket = await _repository.GetByIdAsync(id, cancellationToken);
@@ -89,7 +91,7 @@ namespace NimbusDesk.API.Controllers
 
             return Ok(dto);
 
-        }
+        }*/
 
         [HttpGet]
         public async Task<ActionResult<PagedResult<TicketSummaryDto>>> Get(
@@ -163,6 +165,23 @@ namespace NimbusDesk.API.Controllers
         {
             await handler.HandleAsync(new AssignTicketCommand(id, userId), HttpContext.RequestAborted);
             return NoContent(); // Status 204
+        }
+
+        [HttpPost("{id:guid}/comments")]
+        public async Task<IActionResult> AddComment(Guid id, [FromBody] AddCommentRequest request, [FromServices] AddCommentHandler handler)
+        {
+            await handler.HandleAsync(new AddCommentCommand(id, request.UserId, request.Content), HttpContext.RequestAborted);
+            return NoContent();
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<TicketDetailsDto>> GetDetails(Guid id, [FromServices] GetTicketDetailsHandler handler)
+        {
+            var ticket = await handler.HandleAsync(id, HttpContext.RequestAborted);
+
+            if (ticket is null) return NotFound();
+
+            return Ok(ticket);
         }
 
     }

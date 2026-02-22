@@ -72,7 +72,16 @@ namespace NimbusDesk.Infrastructure.Persistence.Configurations
             builder.Property(t => t.AssignedToUserId)
                     .IsRequired(false); // Nullable for unassigned tickets
 
+            builder.HasMany(t => t.Comments)
+               .WithOne()
+               .HasForeignKey(c => c.TicketId)
+               .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Navigation(t => t.Comments)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Property(t => t.RowVersion)
+                .IsRowVersion(); // This tells SQL Server to manage this column automatically
         }
     }
 }
