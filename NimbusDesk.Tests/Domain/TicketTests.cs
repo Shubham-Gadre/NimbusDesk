@@ -221,6 +221,17 @@ namespace NimbusDesk.Tests.Domain
             Assert.Throws<NotSupportedException>(() => coll.Clear());
         }
 
+        [Fact]
+        public void Assign_ShouldThrowException_WhenTicketIsClosed()
+        {
+            // Arrange
+            var ticket = new Ticket("Title", "Description", TicketPriority.Medium);
+            ticket.Close();
+
+            // Act & Assert
+            Assert.Throws<DomainException>(() => ticket.Assign(Guid.NewGuid()));
+        }
+
     }
 }
 

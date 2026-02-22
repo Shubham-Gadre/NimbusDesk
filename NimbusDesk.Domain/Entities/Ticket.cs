@@ -16,6 +16,25 @@ namespace NimbusDesk.Domain.Entities
         public TicketPriority Priority { get; private set; }
         public DateTime CreatedAt { get; }
         public DateTime? ClosedAt { get; private set; }
+        public Guid? AssignedToUserId { get; private set; }
+
+        public void Assign(Guid userId)
+        {
+            if (Status == TicketStatus.Closed)
+                throw new DomainException("Cannot assign a closed ticket.");
+
+            if (AssignedToUserId == userId) return;
+
+            var fromValue = AssignedToUserId?.ToString() ?? "Unassigned";
+            AssignedToUserId = userId;
+
+            // Use the static Create method instead of 'new'
+            _history.Add(TicketHistory.Create(
+                Id,
+                "AssignmentChanged",
+                fromValue,
+                userId.ToString()));
+        }
 
 
 

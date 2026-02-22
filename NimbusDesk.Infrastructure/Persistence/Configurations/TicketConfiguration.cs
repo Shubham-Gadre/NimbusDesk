@@ -69,6 +69,9 @@ namespace NimbusDesk.Infrastructure.Persistence.Configurations
             builder.Navigation(t => t.History)
                    .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+            builder.Property(t => t.AssignedToUserId)
+                    .IsRequired(false); // Nullable for unassigned tickets
+
 
         }
     }

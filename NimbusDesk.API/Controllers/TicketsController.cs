@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Common;
+using NimbusDesk.Application.Tickets.Assign;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Create;
 using NimbusDesk.Application.Tickets.Queries;
@@ -154,6 +155,14 @@ namespace NimbusDesk.API.Controllers
             await _updateTicketHandler.Handle(command, cancellationToken);
 
             return NoContent();
+        }
+
+
+        [HttpPost("{id:guid}/assign")]
+        public async Task<IActionResult> Assign(Guid id, [FromBody] Guid userId, [FromServices] AssignTicketHandler handler)
+        {
+            await handler.HandleAsync(new AssignTicketCommand(id, userId), HttpContext.RequestAborted);
+            return NoContent(); // Status 204
         }
 
     }
