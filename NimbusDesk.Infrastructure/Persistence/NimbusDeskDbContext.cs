@@ -1,12 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NimbusDesk.Domain.Entities;
+using NimbusDesk.Infrastructure.Identity;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace NimbusDesk.Infrastructure.Persistence
 {
-    public sealed class NimbusDeskDbContext : DbContext
+    public sealed class NimbusDeskDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public NimbusDeskDbContext(DbContextOptions<NimbusDeskDbContext> options)
             : base(options)
@@ -16,6 +20,7 @@ namespace NimbusDesk.Infrastructure.Persistence
         public DbSet<Ticket> Tickets => Set<Ticket>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(NimbusDeskDbContext).Assembly);
         }
     }

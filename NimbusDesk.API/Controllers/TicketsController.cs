@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NimbusDesk.Application.Abstraction.Persistence;
 using NimbusDesk.Application.Common;
+using NimbusDesk.Application.Common.DTO_s;
 using NimbusDesk.Application.Tickets.Assign;
 using NimbusDesk.Application.Tickets.Close;
 using NimbusDesk.Application.Tickets.Comment;
@@ -10,12 +13,15 @@ using NimbusDesk.Application.Tickets.Queries;
 using NimbusDesk.Application.Tickets.ReOpen;
 using NimbusDesk.Application.Tickets.Update;
 using NimbusDesk.Domain.ValueObjects;
+using NimbusDesk.Infrastructure.Identity;
 using NimbusDesk.Infrastructure.Persistence;
 
 namespace NimbusDesk.API.Controllers
 {
+
     [ApiController]
     [Route("api/tickets")]
+    [Authorize]  // Default: all endpoints require authorization
     public sealed class TicketsController : ControllerBase
     {
         private readonly CreateTicketHandler _handler;
@@ -25,10 +31,12 @@ namespace NimbusDesk.API.Controllers
         private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
         private readonly ReopenTicketHandler _reopenTicketHandler;
         private readonly UpdateTicketHandler _updateTicketHandler;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ITokenService _tokenService;
         public record AddCommentRequest(Guid UserId, string Content);
 
 
-        public TicketsController(CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler, ReopenTicketHandler reopenTicketHandler, UpdateTicketHandler updateTicketHandler)
+        public TicketsController(UserManager<ApplicationUser> userManager, ITokenService tokenService, CreateTicketHandler handler, CloseTicketHandler closeHandler, ITicketRepository repository, GetTicketsHandler getTicketsHandler, GetTicketHistoryHandler getTicketHistoryHandler, ReopenTicketHandler reopenTicketHandler, UpdateTicketHandler updateTicketHandler)
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
@@ -37,6 +45,8 @@ namespace NimbusDesk.API.Controllers
             _getTicketHistoryHandler = getTicketHistoryHandler;
             _reopenTicketHandler = reopenTicketHandler;
             _updateTicketHandler = updateTicketHandler;
+            _userManager = userManager;
+            _tokenService = tokenService;
         }
         public sealed record CreateTicketRequest
         (
@@ -58,6 +68,57 @@ namespace NimbusDesk.API.Controllers
             string Title,
             string Description,
             string Priority);
+
+
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            if (existingUser != null)
+                return BadRequest("Email already registered");
+
+            var user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(new { message = "Registration failed", errors });
+            }
+
+            return Ok(new { message = "Registration successful. Please log in." });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
+                return Unauthorized(new { message = "Invalid email or password" });
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _tokenService.GenerateJwtToken(user, roles);
+
+            return Ok(new AuthResponse(token, user.Email!, user.FirstName));
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Create(
@@ -93,6 +154,7 @@ namespace NimbusDesk.API.Controllers
 
         }*/
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<PagedResult<TicketSummaryDto>>> Get(
                 [FromQuery] int page = 1,
