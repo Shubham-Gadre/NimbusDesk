@@ -18,10 +18,10 @@ namespace NimbusDesk.Infrastructure.Persistence
         }
 
         public DbSet<Ticket> Tickets => Set<Ticket>();
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(NimbusDeskDbContext).Assembly);
+            base.OnModelCreating(builder);
+            builder.ApplyConfigurationsFromAssembly(typeof(NimbusDeskDbContext).Assembly);
         }
     }
 }

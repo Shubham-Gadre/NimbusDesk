@@ -26,7 +26,6 @@ namespace NimbusDesk.API.Controllers
     {
         private readonly CreateTicketHandler _handler;
         private readonly CloseTicketHandler _closeTicketHandler;
-        private readonly ITicketRepository _repository;
         private readonly GetTicketsHandler _getTicketsHandler;
         private readonly GetTicketHistoryHandler _getTicketHistoryHandler;
         private readonly ReopenTicketHandler _reopenTicketHandler;
@@ -40,7 +39,6 @@ namespace NimbusDesk.API.Controllers
         {
             _handler = handler;
             _closeTicketHandler = closeHandler;
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _getTicketsHandler = getTicketsHandler ?? throw new ArgumentNullException(nameof(getTicketsHandler));
             _getTicketHistoryHandler = getTicketHistoryHandler;
             _reopenTicketHandler = reopenTicketHandler;
@@ -134,25 +132,6 @@ namespace NimbusDesk.API.Controllers
 
             return CreatedAtAction(nameof(GetDetails), new { id = ticketId }, null);
         }
-
-        /*[HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
-        {
-            var ticket = await _repository.GetByIdAsync(id, cancellationToken);
-            if (ticket is null) return NotFound();
-
-            var dto = new TicketDto(
-                ticket.Id,
-                ticket.Title,
-                ticket.Description,
-                ticket.Status,
-                ticket.Priority.Value,
-                ticket.CreatedAt,
-                ticket.ClosedAt);
-
-            return Ok(dto);
-
-        }*/
 
         [Authorize]
         [HttpGet]
