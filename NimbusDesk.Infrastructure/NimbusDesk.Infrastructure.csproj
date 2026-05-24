@@ -19,6 +19,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.StringTools" Version="17.14.28" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.16" />
   </ItemGroup>
 
   <ItemGroup>

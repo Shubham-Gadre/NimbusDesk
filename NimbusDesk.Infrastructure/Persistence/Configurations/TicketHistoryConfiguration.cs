@@ -2,9 +2,17 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NimbusDesk.Domain.Entities;
 
+/// <summary>
+/// Configures the Entity Framework Core mapping for the TicketHistory entity.
+/// Defines table structure, column constraints, indexes, and relationships including cascading deletes.
+/// </summary>
 public sealed class TicketHistoryConfiguration
     : IEntityTypeConfiguration<TicketHistory>
 {
+    /// <summary>
+    /// Configures the TicketHistory entity mapping to the database.
+    /// </summary>
+    /// <param name="builder">The entity type builder used to configure the TicketHistory entity.</param>
     public void Configure(EntityTypeBuilder<TicketHistory> builder)
     {
         builder.ToTable("TicketHistory");

@@ -2,6 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace NimbusDesk.API.Controllers
 {
+    /// <summary>
+    /// API controller for weather forecast operations.
+    /// Provides endpoints for retrieving weather forecast data.
+    /// This is a sample controller included in the default ASP.NET Core template.
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
@@ -11,6 +16,10 @@ namespace NimbusDesk.API.Controllers
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         ];
 
+        /// <summary>
+        /// Retrieves a list of weather forecast data for the next 5 days.
+        /// </summary>
+        /// <returns>An enumerable collection of WeatherForecast objects.</returns>
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {

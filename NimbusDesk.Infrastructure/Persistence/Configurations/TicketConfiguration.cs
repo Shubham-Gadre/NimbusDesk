@@ -8,8 +8,16 @@ using System.Text;
 
 namespace NimbusDesk.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Configures the Entity Framework Core mapping for the Ticket entity.
+    /// Defines table structure, column constraints, indexes, relationships, and value object conversions.
+    /// </summary>
     public sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
+        /// <summary>
+        /// Configures the Ticket entity mapping to the database.
+        /// </summary>
+        /// <param name="builder">The entity type builder used to configure the Ticket entity.</param>
         public void Configure(EntityTypeBuilder<Ticket> builder)
         {
             builder.ToTable("Tickets");

@@ -3,8 +3,16 @@ using NimbusDesk.Application.Common.DTO_s;
 
 namespace NimbusDesk.Application.Identity
 {
+    /// <summary>
+    /// Validator for the RegisterRequest.
+    /// Validates user registration data including email format, password strength, and name requirements.
+    /// </summary>
     public class RegisterValidator : AbstractValidator<RegisterRequest>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RegisterValidator"/> class.
+        /// Configures validation rules for user registration.
+        /// </summary>
         public RegisterValidator()
         {
             RuleFor(x => x.Email)
@@ -31,8 +39,16 @@ namespace NimbusDesk.Application.Identity
         }
     }
 
+    /// <summary>
+    /// Validator for the LoginRequest.
+    /// Validates user login credentials including email format and password presence.
+    /// </summary>
     public class LoginValidator : AbstractValidator<LoginRequest>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginValidator"/> class.
+        /// Configures validation rules for user login.
+        /// </summary>
         public LoginValidator()
         {
             RuleFor(x => x.Email)

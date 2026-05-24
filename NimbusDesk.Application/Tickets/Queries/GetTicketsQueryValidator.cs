@@ -5,9 +5,17 @@ using System.Text;
 
 namespace NimbusDesk.Application.Tickets.Queries
 {
+    /// <summary>
+    /// Validator for the GetTicketsQuery.
+    /// Validates pagination parameters, sort options, and sort direction according to business rules.
+    /// </summary>
     public sealed class GetTicketsQueryValidator
     : AbstractValidator<GetTicketsQuery>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetTicketsQueryValidator"/> class.
+        /// Configures validation rules for ticket queries.
+        /// </summary>
         public GetTicketsQueryValidator()
         {
             RuleFor(x => x.Page).GreaterThan(0);

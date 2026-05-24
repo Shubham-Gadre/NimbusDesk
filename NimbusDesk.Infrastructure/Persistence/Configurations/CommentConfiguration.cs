@@ -7,8 +7,16 @@ using System.Text;
 
 namespace NimbusDesk.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Configures the Entity Framework Core mapping for the Comment entity.
+    /// Defines table structure, column constraints, and indexes.
+    /// </summary>
     public sealed class CommentConfiguration : IEntityTypeConfiguration<Comment>
     {
+        /// <summary>
+        /// Configures the Comment entity mapping to the database.
+        /// </summary>
+        /// <param name="builder">The entity type builder used to configure the Comment entity.</param>
         public void Configure(EntityTypeBuilder<Comment> builder)
         {
             builder.ToTable("Comments");

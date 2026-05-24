@@ -7,8 +7,16 @@ using System.Text;
 
 namespace NimbusDesk.Infrastructure.Persistence.Configurations
 {
+    /// <summary>
+    /// Configures the Entity Framework Core mapping for the ApplicationUser entity.
+    /// Defines column constraints and default values for user profile properties.
+    /// </summary>
     public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
     {
+        /// <summary>
+        /// Configures the ApplicationUser entity mapping to the database.
+        /// </summary>
+        /// <param name="builder">The entity type builder used to configure the ApplicationUser entity.</param>
         public void Configure(EntityTypeBuilder<ApplicationUser> builder)
         {
             builder.Property(u => u.FirstName)
